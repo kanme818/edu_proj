@@ -1,0 +1,5 @@
+eclipse.preferences.version=1
+encoding//cfg/message.properties=UTF-8
+encoding//tools/build.local.properties=UTF-8
+encoding//tools/datasource.local.properties=UTF-8
+encoding//tools/datasource.unittest.properties=UTF-8

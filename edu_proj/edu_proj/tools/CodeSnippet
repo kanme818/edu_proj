@@ -1,0 +1,65 @@
+// --------------------------------------------------------------------------
+
+@Id
+@GeneratedValue(strategy = GenerationType.TABLE, generator = "idGenerator")
+@TableGenerator(name = "idGenerator", table = BaseTableGenerator.DEFAULT_TABLE_NAME, 
+pkColumnName = BaseTableGenerator.DEFAULT_SEGMENT_COLUMN_NAME, 
+pkColumnValue = IDs.CATEGORY_ID, valueColumnName = BaseTableGenerator.DEFAULT_VALUE_COLUMN_NAME, 
+initialValue = BaseTableGenerator.DEFAULT_INITIAL_VALUE, allocationSize = BaseTableGenerator.DEFAULT_INCREMENT_SIZE)
+
+// --------------------------------------------------------------------------
+
+@GenericGenerator(name = "keygenerator", strategy = "www.lincoinfo.com.business.common.generator.CustomPropertyKeyGenerator", parameters = {
+			@Parameter(name = "table_name", value = BaseTableGenerator.DEFAULT_TABLE_NAME),
+			@Parameter(name = "segment_column_name", value = BaseTableGenerator.DEFAULT_SEGMENT_COLUMN_NAME),
+			@Parameter(name = "value_column_name", value = BaseTableGenerator.DEFAULT_VALUE_COLUMN_NAME),
+			@Parameter(name = "segment_value", value = CustomPropertyKeyGenerator.KEYGEN_NAME),
+			@Parameter(name = "increment_size", value = BaseTableGenerator.DEFAULT_INCREMENT_SIZE+""),
+			@Parameter(name = "optimizer", value = BaseTableGenerator.DEFAULT_OPTIMIZER) })
+	@GeneratedValue(generator = "keygenerator", strategy = GenerationType.TABLE)
+
+// --------------------------------------------------------------------------
+	
+@Entity
+@Table(name = "product")
+
+// --------------------------------------------------------------------------
+	
+@Id
+@GeneratedValue(strategy = GenerationType.AUTO)
+
+@Column(name = "payment_sheet_no", nullable = false, unique = true, length = 25)
+
+@Column(name = "sales_price", columnDefinition = "NUMERIC(18,2) default 0 ")
+
+@Column(name = "update_time", nullable = false)
+
+@ManyToOne
+@JoinColumn(name = "product_id")
+// column of self table
+
+@ManyToMany
+@JoinTable(name = "user_role", joinColumns = { @JoinColumn(name = "user_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
+// table name, column of master table, column of slave table
+
+@OneToMany
+@JoinColumn(name = "counting_sheet_id")
+// column of slave table, by default join to master table's PK
+
+// Dao Method Template
+	void createUser(UserModel user);
+
+	void updateUser(UserModel user);
+
+	void deleteUser(UserModel user);
+
+	UserModel findUser(Long id);
+
+	UserModel findUser(UserModel query);
+
+	List<UserModel> findUsers(UserModel query, Pagination page, Sorting sort);
+	
+	Criteria criteria = getSession().createCriteria(UserModel.class);
+		criteria.add(Example.create(user));
+		UserModel userModel = (UserModel) uniqueResult(criteria.list());
+		return userModel;

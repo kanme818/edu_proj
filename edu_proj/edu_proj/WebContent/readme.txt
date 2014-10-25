@@ -1,0 +1,4 @@
+开发前请先复制tools目录下的datasource.local.properties到cfg目录下
+复制tools目录下的datasource.unittest.properties到test目录下
+如需本地使用ant构建程序，请复制复制tools目录下的build.local.properties到工程目录下
+修改数据库链接、账号密码为本地账号密码

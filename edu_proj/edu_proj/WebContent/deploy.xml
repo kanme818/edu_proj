@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="deploy.local" name="linco_wms">
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+	<property name="war.name" value="${ant.project.name}" />
+
+	<!-- 本地构建 -->
+	<target name="deploy.local" description="build for local env.">
+		<var name="properties.file.name" value="build.local.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 开发环境构建 -->
+	<target name="deploy.dev" description="build for dev env.">
+		<var name="properties.file.name" value="build.dev.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 测试环境构建 -->
+	<target name="deploy.test" description="build for test env.">
+		<var name="properties.file.name" value="build.test.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 生产环境构建 -->
+	<target name="deploy.prod" description="build for prod.">
+		<var name="properties.file.name" value="build.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 校验配置文件是否存在 -->
+	<target name="validate" description="validate for build properties.">
+		<echo>properties file selected: ${properties.file.name}</echo>
+		<available file="${properties.file.name}" property="properties.exist" />
+		<antcall target="set.evn" />
+	</target>
+
+	<!-- 设置环境变量 -->
+	<target name="set.evn" if="properties.exist" description="start building.">
+		<property file="${properties.file.name}" />
+		<var name="tomcat.home" value="${tomcat.home}" />
+		<var name="build.workspace" value="${build.workspace}" />
+		<property name="war.dir" value="${build.workspace}" />
+		<antcall target="deploy" />
+	</target>
+
+	<target name="deploy" depends="server.stop" description="部署">
+		<antcall target="war.deploy" />
+		<antcall target="server.start" />
+	</target>
+
+
+	<target name="war.deploy" depends="clear" description="部署">
+		<echo message="deploy" />
+		<echo>: ${tomcat.home}</echo>
+		<echo>: ${war.dir}/${war.name}.war</echo>
+		<copy todir="${tomcat.home}/webapps">
+			<fileset dir="${war.dir}">
+				<include name="${war.name}.war" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="clear" description="清理旧文件">
+		<echo message="clean folder" />
+		<delete file="${tomcat.home}/webapps/${war.name}.war" />
+		<delete dir="${tomcat.home}/webapps/${war.name}" />
+	</target>
+
+	<target name="server.stop" description="tomcat stop.....">
+		<exec executable="${tomcat.home}/bin/shutdown.bat" spawn="true" vmlauncher="true">
+			<env key="CATALINA_HOME" value="${tomcat.home}" />
+			<arg line="/c start ${tomcat.home}/bin/shutdown.bat" />
+		</exec>
+		<sleep seconds="10"/>
+	</target>
+
+	<target name="server.start" description="tomcat starting.....">
+		<exec executable="${tomcat.home}/bin/startup.bat" spawn="true" vmlauncher="false">
+			<env key="CATALINA_HOME" value="${tomcat.home}" />
+			<arg line="/c start ${tomcat.home}/bin/startup.bat" />
+		</exec>
+	</target>
+
+</project>

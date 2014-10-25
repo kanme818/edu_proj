@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="build.local" name="linco_wms">
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+	<property environment="env" />
+	<property name="war.name" value="${ant.project.name}" />
+
+	<path id="classpath">
+		<!-- webapp/lib -->
+		<fileset dir="${basedir}/WebContent/WEB-INF/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<!-- tomcat/lib -->
+		<fileset dir="${tomcat.home}/lib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- 本地构建 -->
+	<target name="build.local" description="build for local env.">
+		<var name="build.level" value="local" />
+		<var name="properties.file.name" value="build.${build.level}.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 开发环境构建 -->
+	<target name="build.dev" description="build for dev env.">
+		<var name="build.level" value="dev" />
+		<var name="properties.file.name" value="build.${build.level}.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 测试环境构建 -->
+	<target name="build.test" description="build for test env.">
+		<var name="build.level" value="test" />
+		<var name="properties.file.name" value="build.${build.level}.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 生产环境构建 -->
+	<target name="build.prod" description="build for prod.">
+		<var name="properties.file.name" value="build.properties" />
+		<antcall target="validate" />
+	</target>
+
+	<!-- 校验配置文件是否存在 -->
+	<target name="validate" description="validate for build properties.">
+		<echo>properties file selected: ${properties.file.name}</echo>
+		<available file="${properties.file.name}" property="properties.exist" />
+		<antcall target="set.evn" />
+	</target>
+
+	<!-- 设置环境变量 -->
+	<target name="set.evn" if="properties.exist" description="start building.">
+		<property file="${properties.file.name}" />
+		<var name="tomcat.home" value="${tomcat.home}" />
+		<var name="build.workspace" value="${build.workspace}" />
+		<property name="war.dir" value="${war.home}" />
+		<property name="classes.dir" value="${build.workspace}/classes" />
+		<antcall target="war" />
+	</target>
+
+	<target name="clear" description="清理旧文件">
+		<echo message="clean folder" />
+		<delete dir="${build.workspace}" />
+	</target>
+
+	<target name="createDir" depends="clear" description="创建初始化目录结构">
+		<echo message="create folder" />
+		<mkdir dir="${build.workspace}" />
+		<mkdir dir="${classes.dir}" />
+	</target>
+
+	<target name="build" depends="createDir" description="编译java文件">
+		<echo message="compile java" />
+		<javac srcdir="${basedir}/src" destdir="${classes.dir}" includeantruntime="false" nowarn="on" source="1.6" target="1.6" deprecation="true" debug="true" encoding="UTF-8">
+			<compilerarg line="-Xlint:unchecked" />
+			<classpath refid="classpath" />
+		</javac>
+
+		<copy todir="${classes.dir}">
+			<fileset dir="${basedir}">
+				<include name="datasource.${build.level}.properties" />
+			</fileset>
+		</copy>
+
+		<copy todir="${classes.dir}">
+			<fileset dir="${basedir}/src">
+				<include name="**/*.xml" />
+				<include name="**/*.properties" />
+			</fileset>
+			<fileset dir="${basedir}/cfg">
+				<include name="**/*.xml" />
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="war" depends="build" description="打成war包">
+		<echo message="build war" />
+		<property name="war.folder" value="${war.name}_build_${env.BUILD_NUMBER}" />
+		<war warfile="${war.dir}/${war.name}.war" webxml="${basedir}/WebContent/WEB-INF/web.xml">
+			<fileset dir="${basedir}/WebContent" />
+			<lib dir="${basedir}/WebContent/WEB-INF/lib" />
+			<classes dir="${classes.dir}" />
+		</war>
+		<copy todir="${war.dir}/${war.folder}">
+			<fileset dir="${war.dir}">
+				<include name="${war.name}.war" />
+			</fileset>
+		</copy>
+	</target>
+
+</project>
